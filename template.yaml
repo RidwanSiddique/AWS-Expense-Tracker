@@ -1,0 +1,48 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Expense Tracker Application
+
+Globals:
+  Function:
+    Timeout: 10
+
+Resources:
+  ExpenseTrackerTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: ExpenseTracker
+      AttributeDefinitions:
+        - AttributeName: UserID
+          AttributeType: S
+        - AttributeName: ExpenseID
+          AttributeType: S
+      KeySchema:
+        - AttributeName: UserID
+          KeyType: HASH
+        - AttributeName: ExpenseID
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
+
+  ExpenseTrackerFunction:
+    Type: AWS::Serverless::Function 
+    Properties:
+      CodeUri: ./ 
+      Handler: lambda_function.lambda_handler
+      Runtime: python3.9
+      Environment:
+        Variables:
+          TABLE_NAME: ExpenseTracker
+      Events:
+        ExpensePost:
+          Type: Api 
+          Properties:
+            Path: /expenses
+            Method: post
+        ExpenseGet:
+          Type: Api
+          Properties:
+            Path: /expenses/{userID}
+            Method: get
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ExpenseTrackerTable
